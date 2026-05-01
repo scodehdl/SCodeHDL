@@ -24,6 +24,10 @@ scode -c <file.sc>       # print component template
 scode -o <outdir> <file.sc>  # specify output directory
 ```
 
+## Website
+
+https://scode.fly.dev/
+
 ## Example
 
 make counter.sc file and execute scode

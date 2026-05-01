@@ -17,9 +17,6 @@ ssim = "scode.ssim:main"
 [tool.setuptools]
 package-dir = {"" = "src"}
 packages = ["scode", "codegen", "lib"]
-
-[tool.setuptools.package-data]
-lib = ["*.sh"]
 py-modules = [
     "_s2", "ast_exec", "ast_signal", "hgenerator",
     "hmodule", "hparser", "hpostproc", "hsignal", "hsimulation", "htestbench",
@@ -27,3 +24,6 @@ py-modules = [
     "run_fuse", "run_scode", "sc_api", "sc_json_export", "sc_util",
     "unparser"
 ]
+
+[tool.setuptools.package-data]
+lib = ["*.sh"]
