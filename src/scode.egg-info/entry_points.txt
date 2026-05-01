@@ -1,0 +1,3 @@
+[console_scripts]
+scode = scode.cli:main
+ssim = scode.ssim:main

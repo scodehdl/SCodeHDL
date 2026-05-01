@@ -1,11 +1,9 @@
 "Usage: unparse.py <path to source file>"
-from __future__ import print_function, unicode_literals
-import six
 import sys
 import ast
 import os
 import tokenize
-from six import StringIO
+from io import StringIO
 
 # Large float and imaginary literals get turned into infinities in the AST.
 # We unparse those infinities to INFSTR.
@@ -45,7 +43,7 @@ class Unparser:
 
     def write(self, text):
         "Append a piece of text to the current line."
-        self.f.write(six.text_type(text))
+        self.f.write(str(text))
 
     def enter(self):
         "Print ':', and increase the indentation."
@@ -187,25 +185,14 @@ class Unparser:
 
     def _Raise(self, t):
         self.fill("raise")
-        if six.PY3:
-            if not t.exc:
-                assert not t.cause
-                return
-            self.write(" ")
-            self.dispatch(t.exc)
-            if t.cause:
-                self.write(" from ")
-                self.dispatch(t.cause)
-        else:
-            self.write(" ")
-            if t.type:
-                self.dispatch(t.type)
-            if t.inst:
-                self.write(", ")
-                self.dispatch(t.inst)
-            if t.tback:
-                self.write(", ")
-                self.dispatch(t.tback)
+        if not t.exc:
+            assert not t.cause
+            return
+        self.write(" ")
+        self.dispatch(t.exc)
+        if t.cause:
+            self.write(" from ")
+            self.dispatch(t.cause)
 
     def _Try(self, t):
         self.fill("try")
@@ -261,10 +248,7 @@ class Unparser:
             self.dispatch(t.type)
         if t.name:
             self.write(" as ")
-            if six.PY3:
-                self.write(t.name)
-            else:
-                self.dispatch(t.name)
+            self.write(t.name)
         self.enter()
         self.dispatch(t.body)
         self.leave()
@@ -275,34 +259,17 @@ class Unparser:
             self.fill("@")
             self.dispatch(deco)
         self.fill("class "+t.name)
-        if six.PY3:
-            self.write("(")
-            comma = False
-            for e in t.bases:
-                if comma: self.write(", ")
-                else: comma = True
-                self.dispatch(e)
-            for e in t.keywords:
-                if comma: self.write(", ")
-                else: comma = True
-                self.dispatch(e)
-            if t.starargs:
-                if comma: self.write(", ")
-                else: comma = True
-                self.write("*")
-                self.dispatch(t.starargs)
-            if t.kwargs:
-                if comma: self.write(", ")
-                else: comma = True
-                self.write("**")
-                self.dispatch(t.kwargs)
-            self.write(")")
-        elif t.bases:
-                self.write("(")
-                for a in t.bases:
-                    self.dispatch(a)
-                    self.write(", ")
-                self.write(")")
+        self.write("(")
+        comma = False
+        for e in t.bases:
+            if comma: self.write(", ")
+            else: comma = True
+            self.dispatch(e)
+        for e in t.keywords:
+            if comma: self.write(", ")
+            else: comma = True
+            self.dispatch(e)
+        self.write(")")
         self.enter()
         self.dispatch(t.body)
         self.leave()
@@ -388,20 +355,7 @@ class Unparser:
         self.write(repr(t.s))
 
     def _Str(self, tree):
-        if six.PY3:
-            self.write(repr(tree.s))
-        else:
-            # if from __future__ import unicode_literals is in effect,
-            # then we want to output string literals using a 'b' prefix
-            # and unicode literals with no prefix.
-            if "unicode_literals" not in self.future_imports:
-                self.write(repr(tree.s))
-            elif isinstance(tree.s, str):
-                self.write("b" + repr(tree.s))
-            elif isinstance(tree.s, unicode):
-                self.write(repr(tree.s).lstrip("u"))
-            else:
-                assert False, "shouldn't get here"
+        self.write(repr(tree.s))
 
     def _Name(self, t):
         self.write(t.id)
@@ -416,18 +370,7 @@ class Unparser:
 
     def _Num(self, t):
         repr_n = repr(t.n)
-        if six.PY3:
-            self.write(repr_n.replace("inf", INFSTR))
-        else:
-            # Parenthesize negative numbers, to avoid turning (-1)**2 into -1**2.
-            if repr_n.startswith("-"):
-                self.write("(")
-            if "inf" in repr_n and repr_n.endswith("*j"):
-                repr_n = repr_n.replace("*j", "j")
-            # Substitute overflowing decimal literal for AST infinities.
-            self.write(repr_n.replace("inf", INFSTR))
-            if repr_n.startswith("-"):
-                self.write(")")
+        self.write(repr_n.replace("inf", INFSTR))
 
     def _List(self, t):
         self.write("[")
@@ -513,17 +456,7 @@ class Unparser:
         self.write("(")
         self.write(self.unop[t.op.__class__.__name__])
         self.write(" ")
-        if six.PY2 and isinstance(t.op, ast.USub) and isinstance(t.operand, ast.Num):
-            # If we're applying unary minus to a number, parenthesize the number.
-            # This is necessary: -2147483648 is different from -(2147483648) on
-            # a 32-bit machine (the first is an int, the second a long), and
-            # -7j is different from -(7j).  (The first has real part 0.0, the second
-            # has real part -0.0.)
-            self.write("(")
-            self.dispatch(t.operand)
-            self.write(")")
-        else:
-            self.dispatch(t.operand)
+        self.dispatch(t.operand)
         self.write(")")
 
     binop = { "Add":"+", "Sub":"-", "Mult":"*", "Div":"/", "Mod":"%",
@@ -704,14 +637,10 @@ class Unparser:
             self.dispatch(t.optional_vars)
 
 def roundtrip(filename, output=sys.stdout):
-    if six.PY3:
-        with open(filename, "rb") as pyfile:
-            encoding = tokenize.detect_encoding(pyfile.readline)[0]
-        with open(filename, "r", encoding=encoding) as pyfile:
-            source = pyfile.read()
-    else:
-        with open(filename, "r") as pyfile:
-            source = pyfile.read()
+    with open(filename, "rb") as pyfile:
+        encoding = tokenize.detect_encoding(pyfile.readline)[0]
+    with open(filename, "r", encoding=encoding) as pyfile:
+        source = pyfile.read()
     tree = compile(source, filename, "exec", ast.PyCF_ONLY_AST, dont_inherit=True)
     Unparser(tree, output)
 

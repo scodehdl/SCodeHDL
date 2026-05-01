@@ -1,0 +1,58 @@
+Metadata-Version: 2.4
+Name: scode
+Version: 1.0.0
+Summary: Hardware Description Language Generator
+Requires-Python: >=3.13
+Description-Content-Type: text/markdown
+
+## Requirements
+
+- Python 3.13 or later
+- pip
+
+## Install
+
+```bash
+pip install git+https://github.com/celim/SCodeHDL.git
+```
+
+## Verify
+
+```bash
+scode --version
+scode --help
+```
+
+## Usage
+```
+scode <file.sc>          # generate VHDL (default)
+scode -v <file.sc>       # generate Verilog
+scode -a <file.sc>       # generate both VHDL and Verilog
+scode -c <file.sc>       # print component template
+scode -o <outdir> <file.sc>  # specify output directory
+```
+
+## Example
+
+test.sc
+
+```python
+N = 8
+inport(clk, reset)
+inport(enable)
+outport(counter_out[N])
+
+with sequence(clk) :
+    counter_out <= (0, reset, counter_out + 1, enable)
+```
+
+make test.sc file and execute scode
+
+```bash
+    scode test.sc
+```
+
+## Website
+
+https://scode.fly.dev/
+

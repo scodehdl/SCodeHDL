@@ -4,8 +4,6 @@
 import sys
 import math
 import hashlib
-import numpy as np
-
 import _s2
 
 
@@ -38,8 +36,6 @@ def max_bits_of_list(src):
             r[i] = min_bits(s)
         elif isinstance(s, (hs.LogicBase, hs.LogicSlice, hs.SignalConstant, hs.LogicExpr)):
             r[i] = s.width
-        elif isinstance(s, np.generic):  # numpy scalar type
-            r[i] = min_bits(int(s))
         else:
             print("max_bits_of_list error : %s", s, file=sys.stderr)
             _s2.debug_view("max_bits_of_list : unknown type(%s)" % s)

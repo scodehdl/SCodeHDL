@@ -27,7 +27,6 @@ import traceback
 from contextlib import contextmanager
 from enum import Enum
 import copy
-import numpy as np
 
 
 import _s2
@@ -607,10 +606,7 @@ class MultiVector(Vector):
     def init(self)    : return self._reset_value
 
     @init.setter
-    def init(self,init_v)  : 
-        if type(init_v) is np.ndarray : 
-            init_v = list(init_v.flatten())
-
+    def init(self,init_v)  :
         if type(init_v) is list:
             num = len(self)
 
@@ -657,10 +653,7 @@ class Array(LogicBase) :
     def init(self)    : return self._reset_value
 
     @init.setter
-    def init(self,init_v)  : 
-        if type(init_v) is np.ndarray : 
-            init_v = list(init_v.flatten())
-
+    def init(self,init_v)  :
         if type(init_v) is list:
             if len(init_v) > self.num : 
                 self._reset_value = init_v[:self.num]
