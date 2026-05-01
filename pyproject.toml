@@ -16,7 +16,10 @@ ssim = "scode.ssim:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-packages = ["scode", "codegen"]
+packages = ["scode", "codegen", "lib"]
+
+[tool.setuptools.package-data]
+lib = ["*.sh"]
 py-modules = [
     "_s2", "ast_exec", "ast_signal", "hgenerator",
     "hmodule", "hparser", "hpostproc", "hsignal", "hsimulation", "htestbench",

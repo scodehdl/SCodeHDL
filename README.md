@@ -1,7 +1,6 @@
 ## Requirements
 
-- Python 3.13 or later
-- pip
+- Scode is made by Python 3.13. But scode can run if python version is above 3.10
 
 ## Install
 
@@ -27,7 +26,7 @@ scode -o <outdir> <file.sc>  # specify output directory
 
 ## Example
 
-test.sc
+make counter.sc file and execute scode
 
 ```python
 N = 8
@@ -39,13 +38,128 @@ with sequence(clk) :
     counter_out <= (0, reset, counter_out + 1, enable)
 ```
 
-make test.sc file and execute scode
-
 ```bash
-    scode test.sc
+    scode counter.sc
 ```
 
-## Website
+then counter.vhd was made.
 
-https://scode.fly.dev/
+```vhdl
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
+entity counter is
+    port (
+        clk                 : in std_logic;
+        reset               : in std_logic;
+        enable              : in std_logic;
+        counter_out         : out std_logic_vector(7 downto 0)
+    );
+end entity;
+
+architecture arch_counter of counter is
+signal counter_out_oi       : std_logic_vector(7 downto 0);
+
+begin
+
+    process(clk)
+    begin
+        if rising_edge(clk) then
+            if reset = '1' then
+                counter_out_oi <= (others=>'0');
+            elsif enable = '1' then
+                counter_out_oi <= std_logic_vector(unsigned(counter_out_oi) + 1);
+            end if;
+        end if;
+    end process;
+    counter_out <= counter_out_oi;
+
+end architecture;
+```
+
+make counter_tb.sc file and execute scode
+
+```python
+testbench('counter.sc') 
+
+tb_clock(clk) 
+reset <= tb_reset(when=100, duration=20)
+enable <= 1
+```
+
+counter_tb.vhd
+
+```vhdl
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity counter_tb is
+end entity;
+
+architecture arch_counter_tb of counter_tb is
+component counter
+    port (
+        clk                 : in std_logic:='0';
+        reset               : in std_logic;
+        enable              : in std_logic;
+        counter_out         : out std_logic_vector(7 downto 0)
+    );
+end component;
+
+signal counter_out          : std_logic_vector(7 downto 0);
+signal clk                  : std_logic:='0';
+signal reset                : std_logic;
+signal enable               : std_logic;
+signal tbreset              : std_logic:='0';
+
+begin
+
+    u0_counter : counter port map (
+        clk                 => clk,
+        reset               => reset,
+        enable              => enable,
+        counter_out         => counter_out
+    );
+    clk <= not clk after 10 ns;
+    tbreset <= '1' after 100 ns, '0' after 120 ns;
+    reset <= tbreset;
+    enable <= '1';
+
+end architecture;
+```
+
+Now, run the simulation. 
+
+```
+ssim counter_tb.sc
+
+Time    CLK     clk reset enable counter_out_oi
+0       0       0   0     1      X
+10      1       1   0     1      X
+20      2       0   0     1      X
+30      3       1   0     1      X
+40      4       0   0     1      X
+50      5       1   0     1      X
+60      6       0   0     1      X
+70      7       1   0     1      X
+80      8       0   0     1      X
+90      9       1   0     1      X
+100     10      0   0     1      X
+110     11      1   1     1      0
+120     12      0   1     1      0
+130     13      1   0     1      1
+140     14      0   0     1      1
+150     15      1   0     1      2
+160     16      0   0     1      2
+170     17      1   0     1      3
+180     18      0   0     1      3
+190     19      1   0     1      4
+```
+
+You can see that it is reset at 110ns and becomes 1 at 130ns. 
+
+You can see that the result is identical when compared with the output from other simulators. 
+
+![alt text](counter_image.png)
