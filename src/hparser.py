@@ -20,7 +20,6 @@ import ast_signal, ast_exec
 import hmodule as hm
 
 
-core_lib_code = ''
 
 #-------------------------------------------------------------------------
 # sc file parsing pipeline
@@ -29,7 +28,6 @@ core_lib_code = ''
 def parse_scfile(fname, *, parent=None, outdir=None, debug_log=False, verilog=False):
     ' run_slab 또는 HDLModule의 include method에 의해 call 된다. '
     ' fname은 항상 *.sc의 extension을 갖게 된다.'
-    _core_lib_parsed()
 
     if not os.path.exists(fname):
         raise FileNotFoundError('[%s] %s not found' % (os.getcwd(), fname))
@@ -57,8 +55,10 @@ def parse_scfile(fname, *, parent=None, outdir=None, debug_log=False, verilog=Fa
     module.debug_log = debug_log
     module.verilog   = verilog
 
-    module.namespace = _mod.namespace
-    module.imodules  = _mod.imodules
+    module.namespace       = _mod.namespace
+    module.imodules        = _mod.imodules
+    module.dependent_files = list(_mod.dependent_files)
+    module.lib_components  = list(_mod.lib_components)
 
     with hs.module_assigned_to_target(module):
         with _s2.pythonpath(module.basepath):
@@ -78,20 +78,6 @@ def _transformCode(contents):
     parsed = ast_signal.applyTupleAssignTransform(parsed)
     parsed = ast_signal.applySignalSpecTransform(parsed)
     return parsed
-
-
-def _core_lib_parsed():
-    global core_lib_code
-
-    fname = 'core_lib.sh'
-    if not os.path.exists(fname):
-        fname = _s2.get_include_file(fname)
-
-    with open(fname, 'r', encoding='latin-1') as f:
-        parsed = _transformCode(f.read())
-        core_lib_code = compile(parsed, '', 'exec')
-
-    _s2.debug_view('%s included' % fname)
 
 
 _pre_cmd = '''
@@ -122,7 +108,6 @@ def _exec_pre_cmd(module, outdir):
         '', 'exec'
     )
     exec(code, module.namespace)
-    exec(core_lib_code, module.namespace)
     module.namespace.update(_s2.get_defines())
 
 

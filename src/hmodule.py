@@ -47,7 +47,6 @@ DYNAMICP = hs.DYNAMICP
 from hparser import (
     parse_scfile,
     _transformCode,
-    _core_lib_parsed,
     _exec_pre_cmd,
     _mk_module,
     _get_sc_contents,

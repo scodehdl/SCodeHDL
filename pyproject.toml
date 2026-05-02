@@ -1,6 +1,6 @@
 [project]
 name = "scode"
-version = "1.0.0"
+version = "1.0.1"
 description = "Hardware Description Language Generator"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -11,7 +11,7 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project.scripts]
-scode = "scode.cli:main"
+scode = "scode.scode:main"
 ssim = "scode.ssim:main"
 
 [tool.setuptools]
